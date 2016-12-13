@@ -1,15 +1,17 @@
 (defpackage #:org.shirakumo.radiance.bootstrap
   (:nicknames #:rb)
-  (:use #:cl #:org.shirakumo.radiance.bootstrap.http))
+  (:use #:cl #:org.shirakumo.radiance.bootstrap.http)
+  (:export #:bootstrap
+           #:install))
 (in-package #:org.shirakumo.radiance.bootstrap)
 
 (defparameter *quickstart-url* "http://beta.quicklisp.org/quicklisp.lisp")
 (defparameter *known-dists* '((shirakumo "http://dist.tymoon.eu/shirakumo.txt")
                               (quicklisp "http://beta.quicklisp.org/dist/quicklisp.txt")))
-(defparameter *default-dists* '(shirakumo quicklisp))
-(defparameter *default-target* #p"~/radiance/")
+(defparameter *default-dists* "shirakumo quicklisp")
+(defparameter *default-target* "~/radiance/")
 (defparameter *default-hostnames* "example.com localhost")
-(defparameter *default-port* 8080)
+(defparameter *default-port* "8080")
 (defparameter *nonce* (gensym "NONCE"))
 
 (defun split (string split)
@@ -25,44 +27,37 @@
       (maybe-add-piece)
       (nreverse pieces))))
 
-(defun read-pathname (&optional (stream *standard-input*) eof-error eof-value)
+(defun read-line* (&optional (stream *standard-input*) eof-error eof-value)
   (let ((read (read-line stream eof-error eof-value)))
     (if (string= "" read)
         eof-value
-        (pathname read))))
+        read)))
 
-(defun read-list (&optional (stream *standard-input*) eof-error eof-value)
-  (let ((read (read-line stream eof-error eof-value)))
-    (split read #\Space)))
+(defun status (string &rest args)
+  (format *query-io* "~& > ~?~%" string args)
+  (finish-output *query-io*))
 
-(defun read-integer (&optional (stream *standard-input*) eof-error eof-value)
-  (let ((read (read stream eof-error eof-value)))
-    (if (integerp read)
-        read
-        eof-value)))
+(defun complain (string &rest args)
+  (format *query-io* "~& ! ~?~%" string args)
+  (finish-output *query-io*))
+
+(defun query (prompt &optional (default NIL d-p) validate)
+  (format *query-io* "~& > ~a~%~@[ [~a]~] " prompt default)
+  (finish-output *query-io*)
+  (let ((read (read-line* *query-io* NIL *nonce*)))
+    (if (eql read *nonce*) (setf read default))
+    (multiple-value-bind (pass value) (if validate
+                                          (funcall validate read)
+                                          (values T read))
+      (if pass
+          value
+          (query prompt default validate)))))
 
 (defun dist-url (name)
   (second (assoc name *known-dists* :test #'string-equal)))
 
 (defmacro f (package name &rest args)
   `(funcall (find-symbol ,(string name) ,(string package)) ,@args))
-
-(defun status (string &rest args)
-  (format *query-io* "~& > ~?~%" string args))
-
-(defun complain (string &rest args)
-  (format *query-io* "~& ! ~?~%" string args))
-
-(defun query (prompt &optional (default NIL d-p) (reader #'read))
-  (format *query-io* "~&~a~@[ [~a~] " prompt default)
-  (let ((read (funcall reader *query-io* NIL *nonce*)))
-    (cond ((not (eql read *nonce*))
-           read)
-          (d-p
-           default)
-          (T
-           (complain "I need an answer.")
-           (query prompt default reader)))))
 
 (defun load-quicklisp-quickstart ()
   (let ((ql-source (download-text *quickstart-url*)))
@@ -75,7 +70,7 @@
 
 (defun install-quicklisp (target &key (dist-url (dist-url :quicklisp)))
   (load-quicklisp-quickstart)
-  (quicklisp-quickstart:install :path target :dist-url dist-url))
+  (f quicklisp-quickstart install :path target :dist-url dist-url))
 
 (defun write-sexpr (out sexpr)
   (write sexpr :stream out :case :downcase))
@@ -122,21 +117,61 @@
         (config (merge-pathnames "config/" target))
         (start (merge-pathnames "start.lisp" target)))
     (install-quicklisp quicklisp :dist-url (first dists))
-    (dolist (dist dists)
-      (f ql-dist install-dist (dist-url dist)))
+    (dolist (dist (rest dists))
+      (f ql-dist install-dist dist :prompt NIL))
     (write-configuration config hostnames port)
     (write-startup start quicklisp config)))
 
-(defun main ()
+(defun to-directory-pathname (pathname)
+  (if (or (pathname-name pathname)
+          (pathname-type pathname))
+      (merge-pathnames (format NIL "~@[~a~]~@[.~a~]"
+                               (pathname-name pathname)
+                               (pathname-type pathname)))
+      pathname))
+
+(defun check-y-or-n (input)
+  (values (find input '("yes" "y" "n" "no") :test #'string-equal)
+          (find input '("yes" "y") :test #'string-equal)))
+
+(defun check-install-target (pathname)
+  (let ((pathname (to-directory-pathname pathname)))
+    (if (probe-file pathname)
+        (if (query "The directory already exists. Is that Ok?"
+                   "yes" #'check-y-or-n)
+            (values T pathname))
+        (values T pathname))))
+
+(defun check-valid-dists (dists)
+  (let ((dists (split dists #\Space)))
+    (values (every #'dist-url dists)
+            (mapcar #'dist-url dists))))
+
+(defun check-valid-hostnames (hostnames)
+  (values T
+          (split hostnames #\Space)))
+
+(defun check-port-number (number)
+  (let ((integer (ignore-errors (parse-integer number))))
+    (values integer integer)))
+
+(defun install ()
   (let (target dists hostnames port)
-    (setf target (query "Where should Radiance be installed to?" *default-target* #'read-pathname))
+    (status "Welcome to the Radiance bootstrapper.")
+    (setf target (query "Where should Radiance be installed to?"
+                        *default-target* #'check-install-target))
     (status "The following dists are known:~{~&  ~{~a  ~20t(~a)~}~}" *known-dists*)
-    (loop do (setf dists (query "Which dists would you like to use?" *default-dists* #'read-list))
-             (if (every #'dist-url dists)
-                 (return)
-                 (complain "Please enter a valid list of dist names.")))
-    (setf hostnames (query "What hostnames is your machine reachable with?" *default-hostnames* #'read-list))
-    (setf port (query "Which port should Radiance run on?" *default-port* #'read-integer))
+    (setf dists (query "Which dists would you like to use?"
+                       *default-dists* #'check-valid-dists))
+    
+    (setf hostnames (query "What hostnames is your machine reachable with?"
+                           *default-hostnames* #'check-valid-hostnames))
+    (setf port (query "Which port should Radiance run on?"
+                      *default-port* #'check-port-number))
     (status "Configuration complete.")
-    (status "Installing Radiance to ~s..." target)
-    (bootstrap target dists hostnames port)))
+    (status "Installing Radiance to ~a ..." target)
+    (bootstrap target dists hostnames port)
+    (status "Installation complete.")
+    (status "Run ~a to start Radiance." (merge-pathnames "start.lisp" target))))
+
+(install)
