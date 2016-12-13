@@ -8,4 +8,8 @@
   :serial T
   :build-operation asdf:monolithic-concatenate-source-op
   :build-pathname "radiance-bootstrap"
-  :components ())
+  :components ((:file "impl")
+               (:file "net")
+               (:file "url")
+               (:file "http")
+               (:file "boot")))
