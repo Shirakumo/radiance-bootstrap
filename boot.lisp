@@ -119,6 +119,7 @@
     (install-quicklisp quicklisp :dist-url (first dists))
     (dolist (dist (rest dists))
       (f ql-dist install-dist dist :prompt NIL))
+    (f ql quickload :radiance)
     (write-configuration config hostnames port)
     (write-startup start quicklisp config)))
 
