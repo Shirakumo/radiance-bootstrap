@@ -463,25 +463,25 @@
   (write sexpr :stream out :case :downcase))
 
 (defun write-configuration (config-dir hostnames port)
-  (let ((core (merge-pathnames "default/radiance-core/radiance-core.conf.lisp" config-dir)))
-    (ensure-directories-exist core)
-    (with-open-file (stream core :direction :output
-                                 :element-type 'character)
-      (write-sexpr stream
-                   `((:interfaces
-                      (:logger . "i-verbose")
-                      (:data-model . "r-simple-model")
-                      (:database . "i-lambdalite")
-                      (:user . "r-simple-users")
-                      (:auth . "r-simple-auth")
-                      (:session . "r-simple-sessions")
-                      (:server . "i-hunchentoot"))
-                     (:server
-                      (:domains . ,hostnames)
-                      (:instances . (((:port . ,port)))))
-                     (:startup :r-simple-errors))))))
+  (ensure-directories-exist config-dir)
+  (with-open-file (stream config-dir :direction :output
+                                     :element-type 'character)
+    (write-sexpr stream
+                 `((:interfaces
+                    (:logger . "i-verbose")
+                    (:data-model . "r-simple-model")
+                    (:database . "i-lambdalite")
+                    (:user . "r-simple-users")
+                    (:auth . "r-simple-auth")
+                    (:session . "r-simple-sessions")
+                    (:server . "i-hunchentoot"))
+                   (:server
+                    (:domains . ,hostnames)
+                    (:instances . (((:port . ,port)))))
+                   (:startup :r-simple-errors)
+                   (:routes)))))
 
-(defun write-startup (start quicklisp-dir module-dir config-dir)
+(defun write-startup (start setup quicklisp-dir module-dir config-dir)
   (with-open-file (stream start :direction :output
                                 :element-type 'character)
     (format stream ";;;; Radiance Launcher
@@ -500,23 +500,38 @@
 
 \(setf radiance:*environment-root* ~s)
 \(radiance:startup)
+\(load ~s)
 \(sleep 0.1)
 \(unwind-protect
     (prepl:repl)
-  (radiance:shutdown))"
+  (radiance:shutdown))~%"
             (pathname-name start) (pathname-type start)
             (merge-pathnames "setup.lisp" quicklisp-dir)
-            module-dir config-dir)))
+            module-dir config-dir setup)))
+
+(defun write-setup (setup)
+  (with-open-file (stream setup :direction :output
+                                :element-type 'character)
+    (format stream ";;;; Radiance Setup
+;;; Place configuration and setup forms in here.
+;;;
+;;; If you use the startup file to run Radiance, this file will
+;;; be evaluated as well once Radiance has been started up.
+
+\(in-package :rad-user)~%")))
 
 (defun bootstrap (target dists hostnames port)
-  (let ((quicklisp (merge-pathnames "quicklisp/" target))
-        (module (merge-pathnames "modules/" target))
-        (config (merge-pathnames "config/" target))
-        (start (merge-pathnames "start.lisp" target)))
+  (let* ((quicklisp (merge-pathnames "quicklisp/" target))
+         (module (merge-pathnames "modules/" target))
+         (config (merge-pathnames "config/" target))
+         (config-file (merge-pathnames "default/radiance-core/radiance-core.conf.lisp" config))
+         (setup (merge-pathnames "setup.lisp" target))
+         (start (merge-pathnames "start.lisp" target)))
     (delete-directory target)
     (ensure-directories-exist module)
-    (write-configuration config hostnames port)
-    (write-startup start quicklisp module config)
+    (write-configuration config-file hostnames port)
+    (write-setup setup)
+    (write-startup start setup quicklisp module config)
     (install-quicklisp quicklisp :dist-url (first dists))
     (dolist (dist (rest dists))
       (f ql-dist install-dist dist :prompt NIL))
@@ -524,7 +539,7 @@
     (setf (s radiance *environment-root*) config)
     (f radiance startup)
     (f radiance shutdown)
-    (sleep 1)))
+    (values module config config-file setup start)))
 
 (defun to-directory-pathname (pathname)
   (if (or (pathname-name pathname)
@@ -574,9 +589,13 @@
                       *default-port* #'check-port-number))
     (status "Configuration complete.")
     (status "Installing Radiance to ~a ..." target)
-    (bootstrap target dists hostnames port)
-    (status "Installation complete.~%")
-    (status "Install custom modules to: ~a" (merge-pathnames "modules/" target))
-    (status "In order to run Radiance:  ~a" (merge-pathnames "start.lisp" target))))
+    (multiple-value-bind (module config config-file setup start)
+        (bootstrap target dists hostnames port)
+      (status "Installation complete.~%")
+      (status "Module directory:      ~a" module)
+      (status "Environment directory: ~a" config)
+      (status "Central configuration: ~a" config-file)
+      (status "Custom setup file:     ~a" setup)
+      (status "Radiance launcher:     ~a" start))))
 
 (install)
