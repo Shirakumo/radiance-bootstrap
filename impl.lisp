@@ -43,11 +43,13 @@
                         when package collect package)
                 ',(mapcar #'string symbol-names)))
 
-(define-impl-symbols (:socket :system :ccl :sb-bsd-sockets :socket :extensions :comm)
-  ;; allegro (socket)
-  #:make-socket
+(define-impl-symbols (:system :socket :excl :ccl :sb-bsd-sockets :extensions :comm
+                              :excl :ccl :ext :unix :si :lw :mkcl :sb-ext)
+  ;;; Socket Stuff
   ;; abcl (system)
   #:make-socket #:get-socket-stream
+  ;; allegro (socket excl)
+  #:make-socket #:delete-directory
   ;; ccl (ccl)
   #:make-socket
   ;; clasp ecl mkcl sbcl (sb-bsd-sockets)
@@ -58,4 +60,21 @@
   #:connect-to-inet-socket
   #:make-fd-stream
   ;; lispworks (comm)
-  #:open-tcp-stream #:get-host-entry)
+  #:open-tcp-stream #:get-host-entry
+  ;;; Directory stuff
+  ;; allegro (excl)
+  #:delete-directory
+  ;; ccl (ccl)
+  #:delete-empty-directory
+  ;; clisp (ext)
+  #:delete-directory
+  ;; cmucl scl (unix)
+  #:unix-rmdir
+  ;; clasp ecl (si)
+  #:rmdir
+  ;; lispworks (lw)
+  #:delete-directory
+  ;; mkcl (mkcl)
+  #:rmdir
+  ;; sbcl (sb-ext)
+  #:delete-directory)

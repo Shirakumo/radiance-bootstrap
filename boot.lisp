@@ -59,6 +59,31 @@
 (defmacro f (package name &rest args)
   `(funcall (find-symbol ,(string name) ,(string package)) ,@args))
 
+(defmacro s (package name)
+  `(symbol-value (find-symbol ,(string name) ,(string package))))
+
+(defun delete-empty-directory (directory)
+  (rb-impl:feature-case
+   (abcl
+    (delete-file directory))
+   ((or allegro clisp lispworks sbcl)
+    (rb-impl:delete-directory directory))
+   (ccl
+    (rb-impl:delete-empty-directory directory))
+   ((or cmucl scl)
+    (rb-impl:unix-rmdir (namestring directory)))
+   ((or clasp ecl mkcl)
+    (rb-impl:rmdir directory))))
+
+(defun delete-directory (directory)
+  (when (probe-file directory)
+    (dolist (file (directory (merge-pathnames "*.*" directory)))
+      (if (or (pathname-name file)
+              (pathname-type file))
+          (delete-file file)
+          (delete-directory file)))
+    (delete-empty-directory directory)))
+
 (defun load-quicklisp-quickstart ()
   (let ((ql-source (download-text *quickstart-url*)))
     (loop for start = 0 then end
@@ -94,7 +119,7 @@
                       (:instances . (((:port . ,port)))))
                      (:startup :r-simple-errors))))))
 
-(defun write-startup (start quicklisp-dir config-dir)
+(defun write-startup (start quicklisp-dir module-dir config-dir)
   (with-open-file (stream start :direction :output
                                 :element-type 'character)
     (format stream ";;;; Radiance startup file
@@ -103,25 +128,38 @@
 ;;;
 
 \(load #p~s)
-\(ql:quickload :radiance)
+\(push #p~s ql:*local-project-directories*)
+\(ql:register-local-projects)
+\(ql:quickload '(prepl radiance))
 \(in-package #:rad-user)
 
 \(setf radiance:*environment-root* #p~s)
-\(radiance:startup)"
+\(radiance:startup)
+\(sleep 0.1)
+\(unwind-protect
+    (prepl:repl)
+  (radiance:shutdown))"
             (pathname-name start) (pathname-type start)
             (merge-pathnames "setup.lisp" quicklisp-dir)
-            config-dir)))
+            module-dir config-dir)))
 
 (defun bootstrap (target dists hostnames port)
   (let ((quicklisp (merge-pathnames "quicklisp/" target))
+        (module (merge-pathnames "modules/" target))
         (config (merge-pathnames "config/" target))
         (start (merge-pathnames "start.lisp" target)))
+    (delete-directory target)
+    (ensure-directories-exist module)
+    (write-configuration config hostnames port)
+    (write-startup start quicklisp module config)
     (install-quicklisp quicklisp :dist-url (first dists))
     (dolist (dist (rest dists))
       (f ql-dist install-dist dist :prompt NIL))
-    (f ql quickload :radiance)
-    (write-configuration config hostnames port)
-    (write-startup start quicklisp config)))
+    (f ql quickload '(prepl radiance))
+    (setf (s radiance *environment-root*) config)
+    (f radiance startup)
+    (f radiance shutdown)
+    (sleep 1)))
 
 (defun to-directory-pathname (pathname)
   (if (or (pathname-name pathname)
@@ -138,7 +176,7 @@
 (defun check-install-target (pathname)
   (let ((pathname (to-directory-pathname pathname)))
     (if (probe-file pathname)
-        (if (query "The directory already exists. Is that Ok?"
+        (if (query "The directory already exists. It will be cleared out during installation. Is that Ok?"
                    "yes" #'check-y-or-n)
             (values T pathname))
         (values T pathname))))
@@ -172,7 +210,8 @@
     (status "Configuration complete.")
     (status "Installing Radiance to ~a ..." target)
     (bootstrap target dists hostnames port)
-    (status "Installation complete.")
-    (status "Run ~a to start Radiance." (merge-pathnames "start.lisp" target))))
+    (status "Installation complete.~%")
+    (status "Install custom modules to: ~a" (merge-pathnames "modules/" target))
+    (status "In order to run Radiance:  ~a" (merge-pathnames "start.lisp" target))))
 
 (install)
