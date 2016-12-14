@@ -7,7 +7,7 @@
   :homepage "https://github.com/Shirakumo/radiance-bootstrap"
   :serial T
   :build-operation asdf:monolithic-concatenate-source-op
-  :build-pathname "radiance-bootstrap"
+  :build-pathname "bin/radiance-bootstrap"
   :components ((:file "impl")
                (:file "net")
                (:file "url")

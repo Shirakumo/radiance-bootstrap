@@ -5,7 +5,7 @@ This is a system that offers a single file to bootstrap Radiance deployed instal
 Download the file and load it in.
 
 ```
-curl -O https://github.com/Shirakumo/radiance-bootstrap/releases/download/0.2/radiance-bootstrap.lisp
+curl -O https://raw.githubusercontent.com/Shirakumo/radiance-bootstrap/master/bin/radiance-bootstrap.lisp
 sbcl --script radiance-bootstrap.lisp
 ```
 
