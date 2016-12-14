@@ -123,20 +123,20 @@
   (with-open-file (stream start :direction :output
                                 :element-type 'character)
     (format stream ";;;; Radiance Launcher
-;;; Please load this file in script mode.
+;;; Please load ~a~@[.~a~] in script mode.
 ;;; Some examples:
 ;;;   abcl --noinit --nosystem --batch --load ~2:*~a~@[.~a~]
 ;;;   ccl -n -b -l ~2:*~a~@[.~a~]
 ;;;   ecl -norc -shell ~2:*~a~@[.~a~]
-;;;   sbcl --script ~a~@[.~a~]
+;;;   sbcl --script ~2:*~a~@[.~a~]
 
-\(load #p~s)
-\(push #p~s ql:*local-project-directories*)
+\(load ~s)
+\(push ~s ql:*local-project-directories*)
 \(ql:register-local-projects)
 \(ql:quickload '(prepl radiance))
 \(in-package #:rad-user)
 
-\(setf radiance:*environment-root* #p~s)
+\(setf radiance:*environment-root* ~s)
 \(radiance:startup)
 \(sleep 0.1)
 \(unwind-protect
