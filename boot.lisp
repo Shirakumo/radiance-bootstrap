@@ -122,10 +122,13 @@
 (defun write-startup (start quicklisp-dir module-dir config-dir)
   (with-open-file (stream start :direction :output
                                 :element-type 'character)
-    (format stream ";;;; Radiance startup file
-;;; Please load this file in script mode. For SBCL, this would be:
-;;;   sbcl --script ~a.~a
-;;;
+    (format stream ";;;; Radiance Launcher
+;;; Please load this file in script mode.
+;;; Some examples:
+;;;   abcl --noinit --nosystem --batch --load ~2:*~a~@[.~a~]
+;;;   ccl -n -b -l ~2:*~a~@[.~a~]
+;;;   ecl -norc -shell ~2:*~a~@[.~a~]
+;;;   sbcl --script ~a~@[.~a~]
 
 \(load #p~s)
 \(push #p~s ql:*local-project-directories*)
