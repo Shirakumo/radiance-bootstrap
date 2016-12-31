@@ -4,9 +4,16 @@ This is a system that offers a single file to bootstrap Radiance deployed instal
 ## Using It
 Download the file and load it in.
 
-```
+```bash
 curl -O https://raw.githubusercontent.com/Shirakumo/radiance-bootstrap/master/bin/radiance-bootstrap.lisp
 sbcl --script radiance-bootstrap.lisp
 ```
 
 It'll ask you some questions about the installation interactively. That's it.
+
+## Compiling the Bootstrapper
+If you want to generate the full bootstrap file yourself, you can do so like this:
+
+```commonlisp
+(asdf:operate 'asdf:build-op :radiance-bootstrap)
+```
