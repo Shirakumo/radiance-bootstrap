@@ -468,13 +468,18 @@
                                      :element-type 'character)
     (write-sexpr stream
                  `((:interfaces
-                    (:logger . "i-verbose")
+                    (:admin . "r-simple-admin")
+                    (:auth . "r-simple-auth")
+                    (:ban . "r-simple-ban")
+                    (:cache . "r-simple-cache")
                     (:data-model . "r-simple-model")
                     (:database . "i-lambdalite")
-                    (:user . "r-simple-users")
-                    (:auth . "r-simple-auth")
+                    (:logger . "i-verbose")
+                    (:profile . "r-simple-profile")
+                    (:rate . "r-simple-rate")
+                    (:server . "i-hunchentoot")
                     (:session . "r-simple-sessions")
-                    (:server . "i-hunchentoot"))
+                    (:user . "r-simple-users"))
                    (:server
                     (:domains . ,hostnames)
                     (:instances . (((:port . ,port)))))
@@ -500,8 +505,7 @@
 
 \(setf radiance:*environment-root* ~s)
 \(radiance:startup)
-\(dolist (asd (directory (merge-pathnames \"**/*.asd\" (first ql:*local-project-directories*))))
-  (ql:quickload (pathname-name asd)))
+\(mapcar #'ql:quickload (find-all-modules (first ql:*local-project-directories*)))
 \(load ~s)
 \(sleep 0.1)
 \(unwind-protect
