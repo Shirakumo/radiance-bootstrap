@@ -500,6 +500,8 @@
 
 \(setf radiance:*environment-root* ~s)
 \(radiance:startup)
+\(dolist (asd (directory (merge-pathnames \"**/*.asd\" (first ql:*local-project-directories*))))
+  (ql:quickload (pathname-name asd)))
 \(load ~s)
 \(sleep 0.1)
 \(unwind-protect
