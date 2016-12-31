@@ -118,9 +118,8 @@
                     (:server . "i-hunchentoot")
                     (:session . "r-simple-sessions")
                     (:user . "r-simple-users"))
-                   (:server
-                    (:domains . ,hostnames)
-                    (:instances . (((:port . ,port)))))
+                   (:domains . ,hostnames)
+                   (:port . ,port)
                    (:startup :r-simple-errors)
                    (:routes)))))
 
