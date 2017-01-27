@@ -10,7 +10,8 @@
   ())
 
 (defmethod concatenate-source ((file template) output)
-  (format output "~&~%(defvar *template-~a* \"" (pathname-name (asdf:component-pathname file)))
+  (format output "~&~%(defvar org.shirakumo.radiance.bootstrap::*template-~a* \""
+          (pathname-name (asdf:component-pathname file)))
   (unwind-protect
        (with-open-file (input (asdf:component-pathname file) :direction :input)
          (loop for c = (read-char input NIL)
@@ -60,10 +61,11 @@
   :serial T
   :build-operation bootstrap-concat-op
   :build-pathname "bin/radiance-bootstrap"
-  :components ((:file "impl")
+  :components ((:file "package")
+               (:file "impl")
                (:file "net")
                (:file "url")
                (:file "http")
-               (:file "boot")
                (template "start")
-               (template "setup")))
+               (template "setup")
+               (:file "boot")))

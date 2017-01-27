@@ -1,8 +1,3 @@
-(defpackage #:org.shirakumo.radiance.bootstrap.impl
-  (:nicknames #:rb-impl)
-  (:use #:cl)
-  (:export #:featurep
-           #:feature-case))
 (in-package #:org.shirakumo.radiance.bootstrap.impl)
 
 (defun featurep (feature)

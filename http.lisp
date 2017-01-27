@@ -1,13 +1,3 @@
-(defpackage #:org.shirakumo.radiance.bootstrap.http
-  (:nicknames #:rb-http)
-  (:use #:cl
-        #:org.shirakumo.radiance.bootstrap.net
-        #:org.shirakumo.radiance.bootstrap.url)
-  (:export #:open-request
-           #:with-request
-           #:write-request-body
-           #:download-text
-           #:download-file))
 (in-package #:org.shirakumo.radiance.bootstrap.http)
 
 (defun acode (name)

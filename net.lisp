@@ -1,11 +1,3 @@
-(defpackage #:org.shirakumo.radiance.bootstrap.net
-  (:nicknames #:rb-net)
-  (:use #:cl #:org.shirakumo.radiance.bootstrap.impl)
-  (:export #:open-connection
-           #:close-connection
-           #:with-connection
-           #:read-connection
-           #:write-connection))
 (in-package #:org.shirakumo.radiance.bootstrap.net)
 
 (defun open-connection (host port &key (element-type '(unsigned-byte 8)))

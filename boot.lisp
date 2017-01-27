@@ -1,8 +1,3 @@
-(defpackage #:org.shirakumo.radiance.bootstrap
-  (:nicknames #:rb)
-  (:use #:cl #:org.shirakumo.radiance.bootstrap.http)
-  (:export #:bootstrap
-           #:install))
 (in-package #:org.shirakumo.radiance.bootstrap)
 
 (defparameter *quickstart-url* "http://beta.quicklisp.org/quicklisp.lisp")

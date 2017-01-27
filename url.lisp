@@ -1,7 +1,3 @@
-(defpackage #:org.shirakumo.radiance.bootstrap.url
-  (:nicknames #:rb-url)
-  (:use #:cl)
-  (:export #:destructure-url))
 (in-package #:org.shirakumo.radiance.bootstrap.url)
 
 (defun read-url-schema (in)
