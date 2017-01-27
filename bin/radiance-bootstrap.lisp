@@ -628,6 +628,7 @@
     (status "Installing Radiance to ~a ..." target)
     (multiple-value-bind (module config config-file setup start)
         (bootstrap target dists hostnames port)
+      (sleep 1)
       (status "Installation complete.~%")
       (status "Module directory:      ~a" module)
       (status "Environment directory: ~a" config)
