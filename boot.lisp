@@ -123,45 +123,15 @@
                    (:startup :r-simple-errors)
                    (:routes)))))
 
-(defun write-startup (start setup quicklisp-dir module-dir config-dir)
+(defun write-startup (start)
   (with-open-file (stream start :direction :output
                                 :element-type 'character)
-    (format stream ";;;; Radiance Launcher
-;;; Please load ~a~@[.~a~] in script mode.
-;;; Some examples:
-;;;   abcl --noinit --nosystem --batch --load ~2:*~a~@[.~a~]
-;;;   ccl -n -b -l ~2:*~a~@[.~a~]
-;;;   ecl -norc -shell ~2:*~a~@[.~a~]
-;;;   sbcl --script ~2:*~a~@[.~a~]
-
-\(load ~s)
-\(push ~s ql:*local-project-directories*)
-\(ql:register-local-projects)
-\(ql:quickload '(prepl radiance))
-\(in-package #:rad-user)
-
-\(setf radiance:*environment-root* ~s)
-\(radiance:startup)
-\(mapcar #'ql:quickload (find-all-modules (first ql:*local-project-directories*)))
-\(load ~s)
-\(sleep 0.1)
-\(unwind-protect
-    (prepl:repl)
-  (radiance:shutdown))~%"
-            (pathname-name start) (pathname-type start)
-            (merge-pathnames "setup.lisp" quicklisp-dir)
-            module-dir config-dir setup)))
+    (write-string *template-start* stream)))
 
 (defun write-setup (setup)
-  (with-open-file (stream setup :direction :output
+  (with-open-file (stream start :direction :output
                                 :element-type 'character)
-    (format stream ";;;; Radiance Setup
-;;; Place configuration and setup forms in here.
-;;;
-;;; If you use the startup file to run Radiance, this file will
-;;; be evaluated as well once Radiance has been started up.
-
-\(in-package :rad-user)~%")))
+    (write-string *template-setup* stream)))
 
 (defun bootstrap (target dists hostnames port)
   (let* ((quicklisp (merge-pathnames "quicklisp/" target))
@@ -174,7 +144,7 @@
     (ensure-directories-exist module)
     (write-configuration config-file hostnames port)
     (write-setup setup)
-    (write-startup start setup quicklisp module config)
+    (write-startup start)
     (install-quicklisp quicklisp :dist-url (first dists))
     (dolist (dist (rest dists))
       (f ql-dist install-dist dist :prompt NIL))
@@ -240,5 +210,3 @@
       (status "Central configuration: ~a" config-file)
       (status "Custom setup file:     ~a" setup)
       (status "Radiance launcher:     ~a" start))))
-
-(install)
