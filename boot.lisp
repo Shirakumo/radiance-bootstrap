@@ -124,7 +124,7 @@
     (write-string *template-start* stream)))
 
 (defun write-setup (setup)
-  (with-open-file (stream start :direction :output
+  (with-open-file (stream setup :direction :output
                                 :element-type 'character)
     (write-string *template-setup* stream)))
 
