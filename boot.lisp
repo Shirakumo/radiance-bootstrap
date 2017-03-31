@@ -152,9 +152,13 @@
 (defun to-directory-pathname (pathname)
   (if (or (pathname-name pathname)
           (pathname-type pathname))
-      (merge-pathnames (format NIL "~@[~a~]~@[.~a~]"
-                               (pathname-name pathname)
-                               (pathname-type pathname)))
+      (make-pathname :name NIL
+                     :type NIL
+                     :directory (append (pathname-directory pathname)
+                                        (list (format NIL "~@[~a~]~@[.~a~]"
+                                                      (pathname-name pathname)
+                                                      (pathname-type pathname))))
+                     :defaults pathname)
       pathname))
 
 (defun check-y-or-n (input)
