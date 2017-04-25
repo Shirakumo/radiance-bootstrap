@@ -43,4 +43,5 @@
 (in-package #:rad-user)
 (unwind-protect
      (prepl:repl)
-  (radiance:shutdown))
+  (when (radiance:started-p)
+    (radiance:shutdown)))
