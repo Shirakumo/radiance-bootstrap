@@ -30,7 +30,22 @@
 
 ;;; Load Radiance and configure it.
 (ql:quickload '(prepl radiance))
-(setf radiance:*environment-root* (rad-bootstrap:path "config/"))
+
+(defmethod radiance:environment-directory (environment (kind (eql :configuration)))
+  (rad-bootstrap:path (make-pathname :directory `(:relative "config" ,environment))))
+
+(defmethod radiance:environment-directory (environment (kind (eql :cache)))
+  (rad-bootstrap:path (make-pathname :directory `(:relative "cache" ,environment))))
+
+(defmethod radiance:environment-directory (environment (kind (eql :data)))
+  (rad-bootstrap:path (make-pathname :directory `(:relative "data" ,environment))))
+
+(defmethod radiance:environment-directory (environment (kind (eql :template)))
+  (rad-bootstrap:path (make-pathname :directory `(:relative "override" ,environment "template"))))
+
+(defmethod radiance:environment-directory (environment (kind (eql :static)))
+  (rad-bootstrap:path (make-pathname :directory `(:relative "override" ,environment "static"))))
+
 (radiance:startup)
 
 ;;; Load all user modules and things.

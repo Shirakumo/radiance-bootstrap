@@ -17,3 +17,6 @@ If you want to generate the full bootstrap file yourself, you can do so like thi
 ```commonlisp
 (asdf:operate 'asdf:build-op :radiance-bootstrap)
 ```
+
+## Migrating from Radiance 1.0 to 2.0
+In Radiance 2.0 the way environment directories are handled has changed, which breaks the previous bootstrapper's start script. In order to migrate, you should be able to just replace the `start.lisp` file with the current one from this repository.
