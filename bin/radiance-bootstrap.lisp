@@ -402,7 +402,8 @@
 (ql:register-local-projects)
 
 ;;; Load Radiance and configure it.
-(ql:quickload '(prepl radiance))
+(ql:quickload '(#-sbcl prepl
+                radiance))
 
 (defmethod radiance:environment-directory (environment (kind (eql :configuration)))
   (rad-bootstrap:path (make-pathname :directory `(:relative \"config\" ,environment))))
@@ -430,7 +431,10 @@
 (sleep 1)
 (in-package #:rad-user)
 (unwind-protect
-     (prepl:repl)
+     (progn
+       #-sbcl (prepl:repl)
+       #+sbcl (sb-ext:enable-debugger)
+       #+sbcl (sb-impl::toplevel-init))
   (when (radiance:started-p)
     (radiance:shutdown)))
 ")
