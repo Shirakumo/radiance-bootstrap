@@ -57,7 +57,9 @@
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "A bootstrapper for Radiance installations"
-  :homepage "https://github.com/Shirakumo/radiance-bootstrap"
+  :homepage "https://Shirakumo.github.io/radiance-bootstrap/"
+  :bug-tracker "https://github.com/Shirakumo/radiance-bootstrap/issues"
+  :source-control (:git "https://github.com/Shirakumo/radiance-bootstrap.git")
   :serial T
   :build-operation bootstrap-concat-op
   :build-pathname "bin/radiance-bootstrap"
