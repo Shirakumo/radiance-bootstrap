@@ -22,8 +22,9 @@
     (format output "\")~%")))
 
 (defmethod asdf:perform ((o asdf:compile-op) (c template))
-  (proclaim `(special ,(intern (format NIL "*~a-~a*"
-                                       '#:template (pathname-name (asdf:component-pathname c)))))))
+  (let ((*print-case* (readtable-case *readtable*)))
+    (proclaim `(special ,(intern (format NIL "*~a-~a*"
+                                         '#:template (pathname-name (asdf:component-pathname c))))))))
 
 (defmethod asdf:perform ((o asdf:load-op) (c template))
   (setf *package* (find-package '#:org.shirakumo.radiance.bootstrap))
