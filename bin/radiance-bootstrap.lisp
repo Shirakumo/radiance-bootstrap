@@ -504,7 +504,7 @@
   `(funcall (find-symbol ,(string name) ,(string package)) ,@args))
 
 (defmacro s (package name)
-  `(symbol-value (find-symbol ,(string name) ,(string package))))
+  `(find-symbol ,(string name) ,(string package)))
 
 (defun delete-empty-directory (directory)
   (rb-impl:feature-case
@@ -544,10 +544,10 @@
 (defun write-sexpr (out sexpr)
   (write sexpr :stream out :case :downcase))
 
-(defun write-configuration (config-dir hostnames port)
-  (ensure-directories-exist config-dir)
-  (with-open-file (stream config-dir :direction :output
-                                     :element-type 'character)
+(defun write-configuration (config-file hostnames port)
+  (ensure-directories-exist config-file)
+  (with-open-file (stream config-file :direction :output
+                                      :element-type 'character)
     (write-sexpr stream
                  `((:interfaces
                     (:admin . "r-simple-admin")
@@ -577,6 +577,27 @@
                                 :element-type 'character)
     (write-string *template-setup* stream)))
 
+(defun fixup-environment (target)
+  (eval `(progn (defmethod ,(s radiance environment-directory) (environment (kind (eql :configuration)))
+                  (merge-pathnames (make-pathname :directory `(:relative "config" ,environment))
+                                   ,target))
+
+                (defmethod ,(s radiance environment-directory) (environment (kind (eql :cache)))
+                  (merge-pathnames (make-pathname :directory `(:relative "cache" ,environment))
+                                   ,target))
+
+                (defmethod ,(s radiance environment-directory) (environment (kind (eql :data)))
+                  (merge-pathnames (make-pathname :directory `(:relative "data" ,environment))
+                                   ,target))
+
+                (defmethod ,(s radiance environment-directory) (environment (kind (eql :template)))
+                  (merge-pathnames (make-pathname :directory `(:relative "override" ,environment "template"))
+                                   ,target))
+
+                (defmethod ,(s radiance environment-directory) (environment (kind (eql :static)))
+                  (merge-pathnames (make-pathname :directory `(:relative "override" ,environment "static"))
+                                   ,target)))))
+
 (defun bootstrap (target dists hostnames port)
   (let* ((quicklisp (merge-pathnames "quicklisp/" target))
          (module (merge-pathnames "modules/" target))
@@ -593,7 +614,7 @@
     (dolist (dist (rest dists))
       (f ql-dist install-dist dist :prompt NIL))
     (f ql quickload '(prepl radiance))
-    (setf (s radiance *environment-root*) config)
+    (fixup-environment target)
     (f radiance startup)
     (f radiance shutdown)
     (values module config config-file setup start)))
