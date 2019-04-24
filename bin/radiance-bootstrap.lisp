@@ -548,6 +548,7 @@
   (ensure-directories-exist config-file)
   (with-open-file (stream config-file :direction :output
                                       :element-type 'character)
+    (format stream "; meta (:version 1.0 :package \"CL-USER\")~%")
     (write-sexpr stream
                  `((:interfaces
                     (:admin . "r-simple-admin")
@@ -611,6 +612,7 @@
     (write-setup setup)
     (write-startup start)
     (install-quicklisp quicklisp :dist-url (first dists))
+    (setf *package* (find-package "CL-USER"))
     (dolist (dist (rest dists))
       (f ql-dist install-dist dist :prompt NIL))
     (f ql quickload '(prepl radiance))
