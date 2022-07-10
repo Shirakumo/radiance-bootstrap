@@ -615,7 +615,7 @@
     (setf *package* (find-package "CL-USER"))
     (dolist (dist (rest dists))
       (f ql-dist install-dist dist :prompt NIL))
-    (f ql quickload '(prepl radiance))
+    (f ql quickload '(#-sbcl prepl radiance))
     (fixup-environment target)
     (f radiance startup)
     (f radiance shutdown)
