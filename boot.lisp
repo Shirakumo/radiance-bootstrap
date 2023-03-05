@@ -1,7 +1,7 @@
 (in-package #:org.shirakumo.radiance.bootstrap)
 
 (defparameter *quickstart-url* "http://beta.quicklisp.org/quicklisp.lisp")
-(defparameter *known-dists* '((shirakumo "http://dist.tymoon.eu/shirakumo.txt")
+(defparameter *known-dists* '((shirakumo "http://dist.shirakumo.org/shirakumo.txt")
                               (quicklisp "http://beta.quicklisp.org/dist/quicklisp.txt")))
 (defparameter *default-dists* "shirakumo quicklisp")
 (defparameter *default-target* "~/radiance/")
