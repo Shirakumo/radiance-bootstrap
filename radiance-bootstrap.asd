@@ -55,8 +55,8 @@
 (asdf:defsystem radiance-bootstrap
   :version "1.0.0"
   :license "zlib"
-  :author "Nicolas Hafner <shinmera@tymoon.eu>"
-  :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
+  :author "Yukari Hafner <shinmera@tymoon.eu>"
+  :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "A bootstrapper for Radiance installations"
   :homepage "https://Shirakumo.github.io/radiance-bootstrap/"
   :bug-tracker "https://github.com/Shirakumo/radiance-bootstrap/issues"
