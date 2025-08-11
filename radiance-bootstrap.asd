@@ -58,9 +58,9 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "A bootstrapper for Radiance installations"
-  :homepage "https://Shirakumo.github.io/radiance-bootstrap/"
-  :bug-tracker "https://github.com/Shirakumo/radiance-bootstrap/issues"
-  :source-control (:git "https://github.com/Shirakumo/radiance-bootstrap.git")
+  :homepage "https://shirakumo.org/docs/radiance-bootstrap/"
+  :bug-tracker "https://shirakumo.org/project/radiance-bootstrap/issues"
+  :source-control (:git "https://shirakumo.org/project/radiance-bootstrap.git")
   :serial T
   :build-operation bootstrap-concat-op
   :build-pathname "bin/radiance-bootstrap"
